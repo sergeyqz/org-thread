@@ -4,7 +4,7 @@
 ;; Author: my-name <email@a.com>
 ;; Keywords: outlines, org-mode, web
 ;; URL: https://github.com/
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "24.1") (unicode-escape "1.1"))
 
 ;;; Commentary:
 
@@ -52,8 +52,15 @@
     (beginning-of-line)
     (looking-at "[[:space:]]*$")))
 
+;; TODO Is there a proper way to unescape a string?
+(defun org-thread--unescape (text)
+  (unicode-unescape (org-thread--unescape-newline text)))
+
+(defun org-thread--unescape-newline (text)
+  (replace-regexp-in-string "\\\\n" "\n" text))
+
 (defun org-thread--insert-as-org (dom)
-  (if (stringp dom) (insert (replace-regexp-in-string "^*" "-" dom))
+  (if (stringp dom) (insert (org-thread--unescape (replace-regexp-in-string "^*" "-" dom)))
     (cl-ecase (dom-tag dom)
       ((p) (progn
              (newline (cond ((org-thread--current-line-empty-p) 0)

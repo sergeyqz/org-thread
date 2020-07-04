@@ -1,0 +1,16 @@
+* org-thread
+
+Reading various stuff like HN comment threads in org-mode.
+
+~C-c C-o~ to open in browser.
+
+** Tasks
+*** TODO Vim like short cuts for brom
+  :PROPERTIES:
+  :CREATED:  [2020-05-22 Fri 18:17]
+  :END:
+j k d collapse? Expand?
+*** TODO Filters in header (tags=story num_comments>0) ?
+:PROPERTIES:
+:CREATED:  [2020-07-04 Sat 15:13]
+:END:

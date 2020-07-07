@@ -2,6 +2,27 @@
 
 Reading various stuff like HN comment threads in org-mode.
 
-~C-c C-o~ to open in browser.
+Call ~org-thread~ to open ~*org-thread*~ buffer. Add a new heading of the next form
 
+#+begin_src org-mode
+,* @hn emacs
+#+end_src
+
+where ~@hn~ is a site you want to search, following is the query. Press ~C-c s~ to search:
+
+#+begin_src org-mode
+,* @hn emacs
+,** Buttery Smooth Emacs...
+,** New GNU Emacs website...
+#+end_src
+
+Move cursor to a result and press ~C-c c~ to load its comments under the heading.
+
+~C-c C-o~ while on a result opens result URL in browser (~org-open-at-point~ function from ~org-mode~).
+
+** Supported search engines
+  - DuckDuckGo (~ddg~)
+  - Hacker News (~hn~)
+
+** Issues
 For some reason I get opened property drawers sometimes. ~C-u C-u TAB~ (~org-set-startup-visibility~) helped me (https://orgmode.org/manual/Initial-visibility.html).

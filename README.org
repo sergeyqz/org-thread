@@ -26,3 +26,5 @@ Move cursor to a result and press ~C-c c~ to load its comments under the heading
 
 ** Issues
 For some reason I get opened property drawers sometimes. ~C-u C-u TAB~ (~org-set-startup-visibility~) helped me (https://orgmode.org/manual/Initial-visibility.html).
+
+Sometimes comments are hidden behind ~...~ right after the properties drawer. You need to press ~C-c C-r~ to call ~org-reveal~.

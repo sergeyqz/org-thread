@@ -22,6 +22,7 @@
   (let-alist result
     (org-insert-subheading '(4))
     (org-thread--insert-as-org .title)
+    (org-set-property "SITE" org-thread--ddg/slug)
     (org-end-of-subtree)
     (insert "\n" .href "\n\n")
     (org-thread--insert-children-as-org .snippet))
@@ -48,5 +49,14 @@
 
 ;;;###autoload
 (org-thread--register-search-engine org-thread--ddg/slug 'org-thread--ddg/search)
+
+;;;###autoload
+(defvar org-thread--ddg
+  (org-thread--site-create
+   :slug org-thread--ddg/slug
+   :search 'org-thread--ddg/search
+   :load-comments nil))
+;;;###autoload
+(org-thread--register-site org-thread--ddg)
 
 (provide 'org-thread-ddg)

@@ -58,7 +58,8 @@
   (let-alist item
     (org-thread--insert-subheading
      .title
-     `(("ID" . ,(or .objectID .id))
+     `(("SITE" . ,org-thread--hn/slug)
+       ("ID" . ,(or .objectID .id))
        ("URL" . ,(org-thread--hn/get-item-url item))
        ("POINTS" . ,.points)
        ("AUTHOR" . ,.author)
@@ -70,6 +71,7 @@
       (org-thread--insert-html-as-org .story_text)))
   (outline-up-heading 1))
 
+;; TODO Parse https://news.ycombinator.com/ HTML code to get comments ordered by points.
 (defun org-thread--hn/get-item (id)
   (org-thread--get-json
    (org-thread--hn/make-item-url-json
@@ -205,5 +207,14 @@
 
 ;;;###autoload
 (org-thread--register-search-engine org-thread--hn/slug 'org-thread--hn/search)
+
+;;;###autoload
+(defvar org-thread--hn
+  (org-thread--site-create
+   :slug org-thread--hn/slug
+   :search 'org-thread--hn/search
+   :load-comments 'org-thread--hn/load-comments))
+;;;###autoload
+(org-thread--register-site org-thread--hn)
 
 (provide 'org-thread-hn)

@@ -1,9 +1,9 @@
 ;;; org-thread.el --- Search and read web in org-mode -*- coding: utf-8; lexical-binding: t; -*-
 
-;; Version: 0.0.4
-;; Author: my-name <email@a.com>
+;; Version: 0.0.5
+;; Author: sergeyqz <sergeyqz@yandex.com>
 ;; Keywords: outlines, org-mode, web
-;; URL: https://github.com/
+;; URL: https://github.com/sergeyqz/org-thread
 ;; Package-Requires: ((emacs "24.1") (unicode-escape "1.1"))
 
 ;;; Commentary:
@@ -15,7 +15,7 @@
 (require 'org-thread-json)
 (require 'org-thread-network)
 
-(defconst org-thread-version "0.0.1" "Version of the `org-thread' package.")
+(defconst org-thread-version "0.0.5" "Version of the `org-thread' package.")
 
 (defgroup org-thread nil
   "Org-thread customization group"
@@ -26,6 +26,16 @@
 (defcustom org-thread-default-search-engine "ddg"
   "Default search engine"
   :type 'string)
+
+(cl-defstruct (org-thread--site (:constructor org-thread--site-create)
+                                (:copier nil))
+  slug search load-comments)
+
+(defvar org-thread--sites (make-hash-table :test 'equal))
+(defun org-thread--register-site (site)
+  (puthash (org-thread--site-slug site) site org-thread--sites))
+(defun org-thread--get-site (slug)
+  (gethash slug org-thread--sites))
 
 (defvar org-thread--search-engines (make-hash-table :test 'equal))
 (defun org-thread--register-search-engine (slug search-fn)
@@ -111,37 +121,52 @@
 (defun org-thread--parse-heading (heading)
   (let* ((sep " ")
          (sep-index (or (string-match sep heading) -1))
-         (search-engine-name (if (and (string-prefix-p "@" heading) (> sep-index 0))
-                                 (substring heading 1 sep-index)
-                               org-thread-default-search-engine))
+         (site-name (if (and (string-prefix-p "@" heading) (> sep-index 0))
+                        (substring heading 1 sep-index)
+                      org-thread-default-search-engine))
          (query (substring heading (1+ sep-index))))
-    `((search-engine-name . ,search-engine-name)
+    `((site-name . ,site-name)
       (query . ,query))))
+
+(defun org-thread--load-comments ()
+  (interactive)
+  (let* ((slug (org-entry-get (point) "SITE"))
+         (site (org-thread--get-site slug))
+         (loader (org-thread--site-load-comments site)))
+    (if (null loader)
+        (message "%s doesn't support comments" slug)
+      (funcall loader))))
 
 (defun org-thread--search ()
   (interactive)
   (let* ((heading (string-trim (cl-fifth (org-heading-components))))
          (parsed (org-thread--parse-heading heading)))
+
     (let-alist parsed
-      (funcall (org-thread--get-search-engine .search-engine-name) .query))))
+      (funcall (org-thread--get-search-engine .site-name) .query))))
 
 (defvar org-thread-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c s") 'org-thread--search)))
+    (define-key map (kbd "C-c s") 'org-thread--search)
+    (define-key map (kbd "C-c c") 'org-thread--load-comments)
+    map)
+  "Keymap for `org-thread-mode'")
+(setf org-thread-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c s") 'org-thread--search)
+    (define-key map (kbd "C-c c") 'org-thread--load-comments)
+    map)
+  )
 
 ;;;###autoload
-(define-derived-mode org-thread-mode
-  org-mode "Org-thread"
-  "Search and read web in org-mode."
-
-  )
+(define-derived-mode org-thread-mode org-mode "Org-thread"
+  "Search and read web in org-mode.")
 
 ;;;###autoload
 (defun org-thread ()
   (interactive)
   (switch-to-buffer org-thread-default-buffer)
-  (org-thread-mode)
-  )
+  (org-thread-mode))
 
 ;;;###autoload
 (defun org-thread-search (query)

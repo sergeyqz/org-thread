@@ -88,7 +88,11 @@
       ;; ((a) (insert (org-make-link-string (dom-attr dom 'href) (dom-text dom))))
       ((a) (progn
              (insert "[[")
-             (insert (dom-attr dom 'href))
+
+             ;; Invalid function for some reason, the next line "fixes" the problem
+             ;; (insert (dom-attr dom 'href))
+             (insert (cdr (assq 'href (dom-attributes dom))))
+
              (insert "]")
              (insert "[")
              (org-thread--insert-children-as-org dom)
@@ -158,7 +162,6 @@
     map)
   )
 
-;;;###autoload
 (define-derived-mode org-thread-mode org-mode "Org-thread"
   "Search and read web in org-mode.")
 

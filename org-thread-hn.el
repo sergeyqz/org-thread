@@ -12,7 +12,6 @@
 
 (require 'org-thread)
 
-;;;###autoload
 (defconst org-thread--hn/slug "hn")
 (defconst org-thread--hn/name "Hacker News")
 (defconst org-thread--hn/base-url "https://news.ycombinator.com")
@@ -57,18 +56,18 @@
 (defun org-thread--hn/insert-item (item)
   (let-alist item
     (org-thread--insert-subheading
-     .title
+     (or .title .author)
      `(("SITE" . ,org-thread--hn/slug)
        ("ID" . ,(or .objectID .id))
        ("URL" . ,(org-thread--hn/get-item-url item))
-       ("POINTS" . ,.points)
+       ,(when .points `("POINTS" . ,.points))
        ("AUTHOR" . ,.author)
        ("COMMENTS" . ,(number-to-string (or .num_comments 0)))
        ("DATE" . ,.created_at)))
-    (when .story_text
+    (when (or .story_text .comment_text)
       (org-end-of-subtree)
       (newline)
-      (org-thread--insert-html-as-org .story_text)))
+      (org-thread--insert-html-as-org (or .story_text .comment_text))))
   (outline-up-heading 1))
 
 ;; TODO Parse https://news.ycombinator.com/ HTML code to get comments ordered by points.
@@ -126,7 +125,7 @@
                     ;; User can delete any comment and we don't want to reintroduce it.
                     ;; TODO Customize it?
                     (when p
-                      (incf new-comments-count)
+                      (cl-incf new-comments-count)
                       (goto-char p)
                       (when update-ancestors
                         (org-thread--hn/org-todo-ancestors "DONE" "UPDATED"))
@@ -134,6 +133,7 @@
                       (insert "TODO " (org-thread--hn/make-item-link .id "#") " "
                               (org-thread--hn/make-user-link .author) ": "
                               (org-thread--hn/make-snippet text))
+                      (org-end-of-subtree)
                       (insert "\n" text)
                       (org-set-property "ID" (number-to-string .id))
                       (org-set-property "TS" (number-to-string .created_at_i))
@@ -142,7 +142,7 @@
                       (let ((n (org-thread--hn/count-comments .children)))
                         (when (> n 0) (org-set-property "COMMENTS" (number-to-string n))))
                       (outline-up-heading 1))))
-                (incf new-comments-count
+                (cl-incf new-comments-count
                       (org-thread--hn/insert-comments .children
                                                       :latest-timestamp latest-timestamp)))
            finally return new-comments-count))
@@ -172,11 +172,10 @@
   `((query ,(org-entry-get (point) "QUERY"))
     (page ,(org-entry-get (point) "PAGE"))
     (tags ,(org-entry-get (point) "HNTAGS"))
-    (numericFilters ,(org-entry-get (point) "NUMERIC_FILTERS"))))
+    (numericFilters ,(or (org-entry-get (point) "NUMERIC_FILTERS") ""))))
 
 ;; TODO By default search stories with no filters.
 ;;      If prefixed or smth, allow to set all params.
-;;;###autoload
 (cl-defun org-thread--hn/search (&optional (query "")
                                            (page org-thread--hn/first-page)
                                            (tags "story")
@@ -186,8 +185,10 @@
     (org-set-property "QUERY" query)
     (org-set-property "PAGE" (number-to-string (1- page)))
     (org-set-property "HNTAGS" tags)
-    (org-set-property "NUMERIC_FILTERS" numeric-filters))
+    ;; (org-set-property "NUMERIC_FILTERS" numeric-filters)
+    )
   (org-thread--hn/load-next-page))
+
 
 (defun org-thread--hn/load-next-page ()
   (while (null (org-entry-get (point) "QUERY"))
@@ -205,16 +206,14 @@
       (goto-char p)
       (unless (bolp) (forward-char)))))
 
-;;;###autoload
 (org-thread--register-search-engine org-thread--hn/slug 'org-thread--hn/search)
 
-;;;###autoload
 (defvar org-thread--hn
   (org-thread--site-create
    :slug org-thread--hn/slug
    :search 'org-thread--hn/search
    :load-comments 'org-thread--hn/load-comments))
-;;;###autoload
+
 (org-thread--register-site org-thread--hn)
 
 (provide 'org-thread-hn)

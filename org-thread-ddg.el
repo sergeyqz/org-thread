@@ -6,7 +6,6 @@
 
 (require 'org-thread)
 
-;;;###autoload
 (defconst org-thread--ddg/slug "ddg")
 (defconst org-thread--ddg/name "DuckDuckGo")
 (defconst org-thread--ddg/base-url "https://html.duckduckgo.com/")
@@ -41,22 +40,19 @@
       (href . ,href)
       (snippet . ,snippet-a))))
 
-;;;###autoload
 (defun org-thread--ddg/search (query)
   (let* ((tree (org-thread--get-html (concat org-thread--ddg/search-url query)))
          (results (org-thread--ddg/parse-results tree)))
     (org-thread--ddg/insert-results results)))
 
-;;;###autoload
 (org-thread--register-search-engine org-thread--ddg/slug 'org-thread--ddg/search)
 
-;;;###autoload
 (defvar org-thread--ddg
   (org-thread--site-create
    :slug org-thread--ddg/slug
    :search 'org-thread--ddg/search
    :load-comments nil))
-;;;###autoload
+
 (org-thread--register-site org-thread--ddg)
 
 (provide 'org-thread-ddg)
